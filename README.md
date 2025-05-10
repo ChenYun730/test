@@ -445,15 +445,25 @@ vsd <- vst(dds, blind=FALSE)
 
 pheatmap(
   mat = heatmap_data,
-  color = colorRampPalette(rev(brewer.pal(11, "RdBu"))(100),
+  color = colorRampPalette(rev(brewer.pal(n = 11, name = "RdBu")))(100),
   scale = "row",
+  cluster_rows = TRUE,
+  cluster_cols = TRUE,
+  clustering_distance_rows = "euclidean",
+  clustering_distance_cols = "euclidean",
+  clustering_method = "complete",
   annotation_col = annotation_col,
   annotation_colors = ann_colors,
+  show_rownames = TRUE,
+  show_colnames = TRUE,
+  fontsize_row = 8,
+  fontsize_col = 8,
   main = "Top 50 Significant Genes (Four Groups Comparison)",
   filename = "heatmap_four_groups.png",
   width = 10,
   height = 8,
-  res = 300
+  res = 300,
+  units = "in"  # 明确指定单位
 )
 ```
 
