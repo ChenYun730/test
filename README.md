@@ -466,6 +466,81 @@ pheatmap(
   units = "in"  # 明确指定单位
 )
 ```
+**通路富集**
+```
+library(clusterProfiler)
+library(org.Hs.eg.db)
+library(ggplot2)
+library(DOSE)
 
+res <- read.csv("/mnt/alamo01/users/chenyun730/program/test/results/deseq2_results.csv", row.names=1)
+deg <- as.data.frame(res)
+deg <- na.omit(deg)
+
+deg_filtered <- deg[deg$padj < 0.05 & abs(deg$log2FoldChange) > 1, ]
+de_genes <- rownames(deg_filtered)
+
+ego <- enrichGO(gene = de_genes,
+                universe = rownames(deg),  # 背景基因设为所有检测基因
+                OrgDb = org.Hs.eg.db,
+                keyType = "SYMBOL",
+                ont = "ALL",
+                pAdjustMethod = "BH",
+                pvalueCutoff = 0.05,
+                qvalueCutoff = 0.2)
+
+write.csv(as.data.frame(ego), file = "GO_enrichment_results.csv")
+
+png("GO_barplot.png", width = 800, height = 600)
+barplot(ego, showCategory = 20, title = "GO Enrichment")
+dev.off()
+
+png("GO_dotplot.png", width = 800, height = 600)
+dotplot(ego, showCategory = 20, title = "GO Enrichment")
+dev.off()
+
+de_genes_entrez <- bitr(de_genes, fromType = "SYMBOL", 
+                        toType = "ENTREZID", 
+                        OrgDb = org.Hs.eg.db)$ENTREZID
+
+kk <- enrichKEGG(gene = de_genes_entrez,
+                 organism = "hsa",
+                 keyType = "kegg",
+                 pAdjustMethod = "BH",
+                 pvalueCutoff = 0.05)
+write.csv(as.data.frame(kk), file = "KEGG_enrichment_results.csv")
+
+png("KEGG_dotplot.png", width = 800, height = 600)
+dotplot(kk, showCategory = 20, title = "KEGG Enrichment")
+dev.off()
+
+geneList <- deg$log2FoldChange
+names(geneList) <- rownames(deg)
+geneList <- sort(geneList, decreasing = TRUE)
+
+gsea_result <- gseGO(geneList = geneList,
+                    OrgDb = org.Hs.eg.db,
+                    ont = "BP",
+                    keyType = "SYMBOL",
+                    nPerm = 1000,
+                    minGSSize = 10,
+                    maxGSSize = 500,
+                    pvalueCutoff = 0.05)
+
+# 保存GSEA结果
+write.csv(as.data.frame(gsea_result), file = "GSEA_results.csv")
+
+# GSEA可视化
+png("GSEA_enrichment_plot.png", width = 800, height = 600)
+gseaplot2(gsea_result, geneSetID = 1, title = gsea_result$Description[1])
+dev.off()
+
+png("GSEA_dotplot.png", width = 800, height = 600)
+dotplot(gsea_result, showCategory = 20, title = "GSEA Results")
+dev.off()
+
+
+
+```
 
 
